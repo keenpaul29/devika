@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Logs
+data/logs/
+*.log
+
+# Database
+data/db/
+*.db
+
+# Environment variables
+.env
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Docker
+*.dockerfile
+docker-compose.yaml
+
+# Miscellaneous
+*.DS_Store
+*.egg-info/
+*.egg
+*.zip
+*.tar.gz
+*.tgz
+*.bak
+*.tmp
+*.swp
