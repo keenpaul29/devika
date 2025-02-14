@@ -29,7 +29,14 @@ class LLM:
     def __init__(self, model_id: str = None):
         self.model_id = model_id
         self.log_prompts = config.get_logging_prompts()
-        self.timeout_inference = config.get_timeout_inference()
+        # Set longer timeout for larger models
+        base_timeout = config.get_timeout_inference()
+        if model_id and '7b' in model_id.lower():
+            self.timeout_inference = base_timeout * 100  # Double timeout for 7B models
+        elif model_id and '13b' in model_id.lower():
+            self.timeout_inference = base_timeout * 300  # Triple timeout for 13B models
+        else:
+            self.timeout_inference = base_timeout
         self.models = {
             "CLAUDE": [
                 ("Claude 3 Opus", "claude-3-opus-20240229"),
@@ -67,8 +74,21 @@ class LLM:
             ],
             
         }
-        if ollama.client:
-            self.models["OLLAMA"] = [(model["name"], model["name"]) for model in ollama.models]
+        if ollama.client and hasattr(ollama, 'models'):
+            try:
+                # Ensure deepseek-r1:7b is included in the Ollama models list
+                self.models["OLLAMA"] = [
+                    (model.get("name", "Unknown"), model.get("name", "Unknown"))
+                    for model in ollama.models
+                    if isinstance(model, dict)
+                ]
+                # Add deepseek-r1:7b if it's not already in the list
+                if not any(model[0] == 'deepseek-r1:7b' for model in self.models["OLLAMA"]):
+                    self.models["OLLAMA"].append(('deepseek-r1:7b', 'deepseek-r1:7b'))
+            except Exception as e:
+                logger.warning(f"Failed to load Ollama models: {str(e)}")
+                self.models["OLLAMA"] = [('deepseek-r1:7b', 'deepseek-r1:7b')]  # Fallback to include deepseek-r1:7b
+
 
     def list_models(self) -> dict:
         return self.models
